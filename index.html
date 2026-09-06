@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline Focus - Study Timer</title>
+  <meta name="description" content="A 100% offline study session timer with procedural Web Audio ambient soundscapes, task tracking, custom pomodoro cycles, and pop-up alarm notifications.">
+  
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b0f19">
+
+  <!-- Style Sheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-focus">
+
+  <div class="app-container">
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="header" id="app-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+        </div>
+        <span>OfflineFocus</span>
+        <span class="offline-tag" title="Runs 100% locally without internet">
+          <span class="offline-pulse"></span> Offline Ready
+        </span>
+      </div>
+
+      <div class="header-actions">
+        <!-- Desktop Notifications Toggle Button -->
+        <button class="icon-btn" id="notif-btn" title="Enable OS Pop-up Notifications">
+          <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        </button>
+
+        <!-- Master Sound Mute Toggle -->
+        <button class="icon-btn" id="mute-btn" title="Toggle Sound Mute">
+          <svg id="mute-icon-on" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          <svg id="mute-icon-off" viewBox="0 0 24 24" style="display:none;"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+        </button>
+
+        <!-- Analytics & Stats Button -->
+        <button class="icon-btn" id="stats-btn" title="Study Analytics & History">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+        </button>
+
+        <!-- Settings Gear Button -->
+        <button class="icon-btn" id="settings-btn" title="Timer Settings">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MODE SELECTOR PILLS -->
+    <nav class="mode-nav">
+      <button class="mode-btn active" data-mode="pomodoro">Pomodoro (25m)</button>
+      <button class="mode-btn" data-mode="shortBreak">Short Break (5m)</button>
+      <button class="mode-btn" data-mode="longBreak">Long Break (15m)</button>
+      <button class="mode-btn" data-mode="custom">Custom</button>
+      <button class="mode-btn" data-mode="stopwatch">Stopwatch</button>
+    </nav>
+
+    <!-- MAIN TIMER CARD -->
+    <main class="timer-card">
+      <canvas id="visualizer-canvas"></canvas>
+
+      <!-- SVG Circular Progress Bar -->
+      <div class="timer-display-wrap">
+        <svg class="progress-ring" viewBox="0 0 280 280">
+          <circle class="progress-ring-bg" cx="140" cy="140" r="120" fill="transparent"/>
+          <circle class="progress-ring-circle" id="progress-circle" cx="140" cy="140" r="120" fill="transparent"
+                  stroke-dasharray="753.98" stroke-dashoffset="0"/>
+        </svg>
+
+        <div class="timer-content">
+          <div class="timer-clock" id="timer-clock">25:00</div>
+          <div class="timer-label" id="timer-mode-label">Focus Session</div>
+          <div class="cycle-badge" id="cycle-count">Cycle #1</div>
+        </div>
+      </div>
+
+      <!-- Current Active Task Label -->
+      <div class="active-task-display">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        <span id="current-task-name">No active task set</span>
+      </div>
+
+      <!-- Controls Row -->
+      <div class="controls-bar">
+        <button class="secondary-btn" id="reset-btn" title="Reset Timer">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+          Reset
+        </button>
+
+        <button class="primary-btn" id="start-btn">
+          <svg id="play-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pause-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          <span id="start-btn-text">START FOCUS</span>
+        </button>
+
+        <button class="secondary-btn" id="skip-btn" title="Skip to Next Cycle">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          Skip
+        </button>
+
+        <button class="icon-btn" id="zen-btn" title="Toggle Fullscreen Zen Focus Mode">
+          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- TASK & SUBJECT MANAGER SECTION -->
+    <section class="card-section">
+      <div class="section-title">
+        <span>Study Tasks & Objectives</span>
+        <span class="cycle-badge" id="task-counter">0 / 0 Done</span>
+      </div>
+
+      <div class="task-input-wrap">
+        <input type="text" id="task-input" class="text-input" placeholder="What are you studying? (e.g. Physics Ch 4, LeetCode, Organic Chem)..." />
+        <button class="secondary-btn" id="add-task-btn">Add Task</button>
+      </div>
+
+      <ul class="task-list" id="task-list">
+        <!-- Dynamic Tasks inserted here -->
+      </ul>
+    </section>
+
+    <!-- OFFLINE PROCEDURAL AMBIENT SOUND DECK -->
+    <section class="card-section">
+      <div class="section-title">
+        <span>Offline Ambient Focus Soundscapes</span>
+        <span class="cycle-badge">100% Web Audio Synthesized</span>
+      </div>
+
+      <div class="ambient-grid">
+        <div class="ambient-card" data-sound="rain">
+          <div class="ambient-header">
+            <span>🌧️ Gentle Rain</span>
+            <span class="ambient-icon">OFF</span>
+          </div>
+          <input type="range" class="slider ambient-vol" min="0" max="1" step="0.05" value="0.5" onclick="event.stopPropagation()">
+        </div>
+
+        <div class="ambient-card" data-sound="brown">
+          <div class="ambient-header">
+            <span>🌊 Deep Brown Noise</span>
+            <span class="ambient-icon">OFF</span>
+          </div>
+          <input type="range" class="slider ambient-vol" min="0" max="1" step="0.05" value="0.5" onclick="event.stopPropagation()">
+        </div>
+
+        <div class="ambient-card" data-sound="binaural">
+          <div class="ambient-header">
+            <span>🧠 40Hz Beta Waves</span>
+            <span class="ambient-icon">OFF</span>
+          </div>
+          <input type="range" class="slider ambient-vol" min="0" max="1" step="0.05" value="0.5" onclick="event.stopPropagation()">
+        </div>
+
+        <div class="ambient-card" data-sound="wind">
+          <div class="ambient-header">
+            <span>🍃 Soft Wind Sweep</span>
+            <span class="ambient-icon">OFF</span>
+          </div>
+          <input type="range" class="slider ambient-vol" min="0" max="1" step="0.05" value="0.5" onclick="event.stopPropagation()">
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /.app-container -->
+
+
+  <!-- ==========================================================================
+       FULL-SCREEN POP-UP ALARM MODAL (Triggers automatically when timer finishes)
+       ========================================================================== -->
+  <div class="modal-overlay" id="completion-modal">
+    <div class="modal-box">
+      <div class="alarm-badge-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      </div>
+
+      <h2 class="modal-title" id="completion-modal-title">🎉 Focus Session Complete!</h2>
+      <p class="modal-desc" id="completion-modal-desc">Great job staying focused! Time to rest your mind with a short break.</p>
+
+      <div class="modal-btn-row">
+        <button class="primary-btn" id="modal-next-btn">Start Short Break (5m)</button>
+        <button class="secondary-btn" id="modal-dismiss-btn">Dismiss Alarm</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================================================
+       ANALYTICS & STUDY HISTORY MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="stats-modal">
+    <div class="modal-box" style="max-width: 540px;">
+      <h2 class="modal-title">📊 Study Analytics & History</h2>
+
+      <div style="display: flex; gap: 16px; width: 100%; justify-content: space-around; margin-top: 10px;">
+        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; flex:1;">
+          <div style="font-size: 1.8rem; font-weight: 800; color: var(--theme-accent);" id="stat-total-time">0 min</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight:600;">Total Focus Time</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; flex:1;">
+          <div style="font-size: 1.8rem; font-weight: 800; color: #10b981;" id="stat-sessions-count">0</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight:600;">Completed Sessions</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; flex:1;">
+          <div style="font-size: 1.8rem; font-weight: 800; color: #f59e0b;" id="stat-streak-count">1 Day</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight:600;">Current Streak</div>
+        </div>
+      </div>
+
+      <div style="width:100%; text-align:left; margin-top:10px;">
+        <h4 style="margin-bottom:8px; font-size:0.95rem; color:var(--text-muted);">Session Logs:</h4>
+        <div id="stats-log-list" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;">
+          <!-- Log entries -->
+        </div>
+      </div>
+
+      <div class="modal-btn-row">
+        <button class="secondary-btn" id="clear-stats-btn" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">Clear History</button>
+        <button class="secondary-btn" id="close-stats-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================================================
+       SETTINGS MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-box">
+      <h2 class="modal-title">⚙️ Timer Settings</h2>
+
+      <div class="settings-grid">
+        <div class="setting-item">
+          <span class="setting-label">Focus Duration (mins)</span>
+          <input type="number" id="set-focus-time" class="setting-input-num" min="1" max="180" value="25">
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Short Break (mins)</span>
+          <input type="number" id="set-short-break" class="setting-input-num" min="1" max="60" value="5">
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Long Break (mins)</span>
+          <input type="number" id="set-long-break" class="setting-input-num" min="1" max="60" value="15">
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Long Break Interval (cycles)</span>
+          <input type="number" id="set-interval" class="setting-input-num" min="1" max="12" value="4">
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Alarm Sound Chime</span>
+          <select id="set-chime-sound" class="setting-select">
+            <option value="zenBowl">🧘 Zen Tibetan Singing Bowl</option>
+            <option value="gong">🔔 Deep Harmonious Gong</option>
+            <option value="marimba">🎵 Soft Marimba Melody</option>
+            <option value="digitalBeep">⏱️ Digital Beep Pulse</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Auto-Start Breaks</span>
+          <input type="checkbox" id="set-autostart-breaks" class="task-checkbox">
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Auto-Start Pomodoros</span>
+          <input type="checkbox" id="set-autostart-pomodoros" class="task-checkbox">
+        </div>
+      </div>
+
+      <div class="modal-btn-row">
+        <button class="primary-btn" id="save-settings-btn">Save Settings</button>
+        <button class="secondary-btn" id="close-settings-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- JavaScript App Files -->
+  <script src="soundEngine.js"></script>
+  <script src="app.js"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('PWA ServiceWorker registered offline.', reg.scope))
+          .catch(err => console.warn('ServiceWorker error:', err));
+      });
+    }
+  </script>
+</body>
+</html>
